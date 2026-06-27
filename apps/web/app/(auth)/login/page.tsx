@@ -21,7 +21,8 @@ export default function LoginPage() {
     try {
       const { access_token } = await api.login(email, password);
       setToken(access_token);
-      router.push("/organization");
+      const me = await api.me();
+      router.push(me.role_name === "Patient" ? "/patient" : "/organization");
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Login failed");
     } finally {

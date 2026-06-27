@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.agents.orchestrator import OrchestratorRequest
 from app.ai.providers.claude_provider import AIProviderError
 from app.core.deps import get_current_user, get_db, get_orchestrator
+from app.core.scope import require_own_patient
 from app.core.security import require_permission
 from app.modules.conversations import schemas, service
 
@@ -45,12 +46,20 @@ async def send_message(
     ANTHROPIC_API_KEY to be a real key; without one this returns a clean 503, not a crash,
     because every other pipeline step (intent, language, speaker, context, safety, memory,
     persistence) runs for real regardless of whether the final LLM call succeeds."""
+    # A patient-portal user can only ever talk about themselves -- default to their own record,
+    # reject any attempt to ask on behalf of a different patient_id.
+    patient_id = payload.patient_id
+    if user.patient_id is not None:
+        if patient_id is not None:
+            require_own_patient(user, patient_id)
+        patient_id = user.patient_id
+
     request = OrchestratorRequest(
         org_id=str(user.org_id),
         user_id=str(user.id),
         text=payload.text,
         task=payload.task,
-        patient_id=str(payload.patient_id) if payload.patient_id else None,
+        patient_id=str(patient_id) if patient_id else None,
         medical_case_id=str(payload.medical_case_id) if payload.medical_case_id else None,
         conversation_session_id=str(session_id),
         target_lang=payload.target_lang,

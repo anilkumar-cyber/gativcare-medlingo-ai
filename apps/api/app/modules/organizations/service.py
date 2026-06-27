@@ -8,26 +8,15 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.permissions_seed import ORG_OWNER_PERMISSIONS
+from app.core.rbac import get_or_create_role
 from app.core.security import create_access_token
 from app.modules.auth import service as auth_service
-from app.modules.auth.models import Permission, Role
 from app.modules.organizations.models import Organization
 
 
 async def get_org_settings(db: AsyncSession, org_id: uuid.UUID) -> Organization | None:
     result = await db.execute(select(Organization).where(Organization.id == org_id))
     return result.scalar_one_or_none()
-
-
-async def _get_or_create_permission(db: AsyncSession, name: str) -> Permission:
-    result = await db.execute(select(Permission).where(Permission.name == name))
-    existing = result.scalar_one_or_none()
-    if existing is not None:
-        return existing
-    permission = Permission(id=uuid.uuid4(), name=name)
-    db.add(permission)
-    await db.flush()
-    return permission
 
 
 async def create_organization(
@@ -37,10 +26,7 @@ async def create_organization(
     db.add(org)
     await db.flush()
 
-    permissions = [await _get_or_create_permission(db, name) for name in ORG_OWNER_PERMISSIONS]
-    owner_role = Role(id=uuid.uuid4(), org_id=org.id, name="Owner", permissions=permissions)
-    db.add(owner_role)
-    await db.flush()
+    owner_role = await get_or_create_role(db, org_id=org.id, name="Owner", permission_names=ORG_OWNER_PERMISSIONS)
 
     user = await auth_service.create_user(
         db,

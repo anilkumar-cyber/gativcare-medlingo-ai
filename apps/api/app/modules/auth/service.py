@@ -16,12 +16,20 @@ async def get_user(db: AsyncSession, user_id: uuid.UUID) -> User | None:
 
 
 async def create_user(
-    db: AsyncSession, *, org_id: uuid.UUID, email: str, password: str, full_name: str | None = None, role_id: uuid.UUID | None = None
+    db: AsyncSession,
+    *,
+    org_id: uuid.UUID,
+    email: str,
+    password: str,
+    full_name: str | None = None,
+    role_id: uuid.UUID | None = None,
+    patient_id: uuid.UUID | None = None,
 ) -> User:
     user = User(
         id=uuid.uuid4(),
         org_id=org_id,
         role_id=role_id,
+        patient_id=patient_id,
         email=email,
         hashed_password=hash_password(password),
         full_name=full_name,

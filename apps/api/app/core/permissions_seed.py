@@ -45,3 +45,17 @@ ORG_OWNER_PERMISSIONS = [
     "consent.manage",
     *[f"ai.{key}.run" for key in AI_AGENT_KEYS],
 ]
+
+# Mirrors the "Patient" / self column of docs/RBAC.md's matrix. Row-level enforcement (a patient
+# only ever sees their own record) happens in each router via app.core.scope, not via a narrower
+# permission string -- a permission alone can't express "your own data only".
+PATIENT_AGENT_KEYS = ["interpret", "concierge", "travel_concierge", "insurance", "knowledge", "clinical_reasoning"]
+
+PATIENT_PERMISSIONS = [
+    "patients.view",
+    "reports.view",
+    "conversations.translate",
+    "medical_twin.view",
+    "consent.manage",
+    *[f"ai.{key}.run" for key in PATIENT_AGENT_KEYS],
+]

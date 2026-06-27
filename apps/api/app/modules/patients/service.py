@@ -5,6 +5,10 @@ import uuid
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.permissions_seed import PATIENT_PERMISSIONS
+from app.core.rbac import get_or_create_role
+from app.core.security import create_access_token
+from app.modules.auth import service as auth_service
 from app.modules.patients.models import MedicalCase, Patient
 
 
@@ -52,3 +56,16 @@ async def update_case_stage(db: AsyncSession, medical_case_id: uuid.UUID, new_st
     case.stage = new_stage
     await db.commit()
     return case
+
+
+async def create_patient_login(db: AsyncSession, *, patient: Patient, email: str, password: str) -> str:
+    """Staff-initiated: creates a portal login for an existing patient record, seeding the
+    org's "Patient" role on first use. Returns a signed access token -- staff hands the
+    email/password to the patient separately; returning the token too just makes this testable
+    in one call instead of requiring an immediate second /auth/login round-trip."""
+    patient_role = await get_or_create_role(db, org_id=patient.org_id, name="Patient", permission_names=PATIENT_PERMISSIONS)
+    user = await auth_service.create_user(
+        db, org_id=patient.org_id, email=email, password=password, full_name=patient.full_name, role_id=patient_role.id, patient_id=patient.id
+    )
+    await db.commit()
+    return create_access_token(user_id=str(user.id), org_id=str(patient.org_id))

@@ -19,6 +19,11 @@ export default function PatientDetailPage() {
   const [scheduledAt, setScheduledAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginCredentials, setLoginCredentials] = useState<{ email: string; password: string } | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [creatingLogin, setCreatingLogin] = useState(false);
 
   const activeCase = cases[0];
 
@@ -69,6 +74,20 @@ export default function PatientDetailPage() {
 
   const doctorName = (id: string) => doctors.find((d) => d.id === id)?.full_name ?? id;
 
+  async function onCreateLogin(e: React.FormEvent) {
+    e.preventDefault();
+    setCreatingLogin(true);
+    setLoginError(null);
+    try {
+      await api.createPatientLogin(id, { email: loginEmail, password: loginPassword });
+      setLoginCredentials({ email: loginEmail, password: loginPassword });
+    } catch (err) {
+      setLoginError(err instanceof ApiError ? err.message : "Failed to create login");
+    } finally {
+      setCreatingLogin(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-[var(--space-6)]">
       <Card>
@@ -76,6 +95,26 @@ export default function PatientDetailPage() {
           <CardTitle>{patient?.full_name ?? "Patient"}</CardTitle>
         </CardHeader>
         <CardContent>{patient?.email}</CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Portal login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loginCredentials ? (
+            <p className="text-[var(--text-sm)]">
+              Created. Hand these to the patient: <strong>{loginCredentials.email}</strong> / <strong>{loginCredentials.password}</strong>
+            </p>
+          ) : (
+            <form onSubmit={onCreateLogin} className="flex flex-wrap items-end gap-[var(--space-3)]">
+              <input required type="email" placeholder="Patient's email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-[var(--space-3)] py-[var(--space-2)] outline-none focus-visible:border-[var(--color-accent)]" />
+              <input required type="password" placeholder="Set a password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} className="rounded-[var(--radius-md)] border border-[var(--color-border)] px-[var(--space-3)] py-[var(--space-2)] outline-none focus-visible:border-[var(--color-accent)]" />
+              <Button type="submit" disabled={creatingLogin}>{creatingLogin ? "Creating..." : "Create portal login"}</Button>
+            </form>
+          )}
+          {loginError && <p className="mt-[var(--space-2)] text-[var(--text-sm)] text-[var(--color-emergency)]">{loginError}</p>}
+        </CardContent>
       </Card>
 
       {!activeCase ? (

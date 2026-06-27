@@ -29,3 +29,13 @@ class MedicalCaseOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class PatientLoginCreate(BaseModel):
+    email: str
+    password: str
+
+
+class PatientLoginOut(BaseModel):
+    access_token: str
+    email: str

@@ -68,6 +68,8 @@ export const api = {
   createCase: (patientId: string) => apiFetch<MedicalCase>(`/api/v1/patients/${patientId}/cases`, { method: "POST" }),
   getCase: (caseId: string) => apiFetch<MedicalCase>(`/api/v1/patients/cases/${caseId}`),
   listCases: (patientId: string) => apiFetch<MedicalCase[]>(`/api/v1/patients/${patientId}/cases`),
+  createPatientLogin: (patientId: string, payload: { email: string; password: string }) =>
+    apiFetch<{ access_token: string; email: string }>(`/api/v1/patients/${patientId}/login`, { method: "POST", body: json(payload) }),
 
   // -- appointments --
   bookAppointment: (payload: { medical_case_id: string; doctor_id: string; scheduled_at: string }) =>

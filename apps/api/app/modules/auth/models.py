@@ -40,6 +40,10 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4)
     org_id: Mapped[uuid.UUID] = mapped_column(UUID, ForeignKey("organizations.id"), nullable=False)
     role_id: Mapped[uuid.UUID | None] = mapped_column(UUID, ForeignKey("roles.id"), nullable=True)
+    # Set only for patient-portal logins -- links this user's account to exactly one patient
+    # record, which is what makes row-level "self" scoping possible (docs/RBAC.md). Staff/doctor/
+    # coordinator users leave this null.
+    patient_id: Mapped[uuid.UUID | None] = mapped_column(UUID, ForeignKey("patients.id"), nullable=True)
     email: Mapped[str] = mapped_column(String, unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String, nullable=False)
     full_name: Mapped[str | None] = mapped_column(String, nullable=True)
