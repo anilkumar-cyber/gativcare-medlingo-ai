@@ -9,6 +9,7 @@ from fastapi import FastAPI
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     from app.ai.agents.automation_agent import register_default_automations
+    from app.ai.agents.orchestrator import MedLingoOrchestrator
     from app.ai.providers.claude_provider import ClaudeProvider
     from app.ai.tools.builtin import register_builtin_tools
     from app.ai.tools.registry import tool_registry
@@ -16,6 +17,10 @@ async def lifespan(app: FastAPI):
     llm_provider = ClaudeProvider()
     register_builtin_tools(tool_registry, llm_provider=llm_provider)
     register_default_automations(llm_provider)
+    # One orchestrator instance for the app's lifetime -- agents hold no per-request state, so
+    # this is safe to share across concurrent requests. Routes reach it via app.state, not a
+    # global, so tests can swap in a different instance.
+    app.state.orchestrator = MedLingoOrchestrator(llm_provider=llm_provider)
     yield
 
 

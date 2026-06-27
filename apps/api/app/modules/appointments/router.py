@@ -23,3 +23,8 @@ async def reschedule_appointment(appointment_id: uuid.UUID, payload: schemas.App
 @router.get("/{appointment_id}", response_model=schemas.AppointmentOut)
 async def read_appointment(appointment_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     return await service.get_appointment(db, appointment_id)
+
+
+@router.get("/case/{medical_case_id}", response_model=list[schemas.AppointmentOut])
+async def list_appointments_for_case(medical_case_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    return await service.list_for_case(db, medical_case_id)

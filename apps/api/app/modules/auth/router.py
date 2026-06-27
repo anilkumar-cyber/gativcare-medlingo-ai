@@ -25,4 +25,5 @@ async def read_current_user(user: User = Depends(get_current_user)):
         email=user.email,
         full_name=user.full_name,
         role_name=user.role.name if user.role else None,
+        permissions=sorted(p.name for p in (user.role.permissions if user.role else [])),
     )

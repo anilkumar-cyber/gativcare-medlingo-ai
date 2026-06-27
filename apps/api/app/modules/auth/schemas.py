@@ -9,6 +9,7 @@ class UserOut(BaseModel):
     email: EmailStr
     full_name: str | None
     role_name: str | None
+    permissions: list[str]
 
     class Config:
         from_attributes = True

@@ -30,3 +30,19 @@ class ConversationTurnOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class MessageIn(BaseModel):
+    text: str
+    patient_id: uuid.UUID | None = None
+    medical_case_id: uuid.UUID | None = None
+    target_lang: str | None = None
+    task: str | None = None  # explicit agent override; omit to let intent detection pick
+
+
+class MessageOut(BaseModel):
+    content: str
+    confidence: float
+    flags: list[str]
+    emergency: bool
+    intent: str

@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 60 * 24
     anthropic_api_key: str
+    anthropic_model: str = "claude-sonnet-4-6"
 
     class Config:
         env_file = ".env"

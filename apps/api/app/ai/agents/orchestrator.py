@@ -273,6 +273,7 @@ class MedLingoOrchestrator:
         return await self.context_engine.run({
             "medical_case_id": request.medical_case_id,
             "conversation_session_id": request.conversation_session_id,
+            "db": request.db,
         })
 
     async def _retrieve_patient_memory(self, request: OrchestratorRequest) -> dict:

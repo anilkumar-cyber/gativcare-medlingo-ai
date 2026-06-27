@@ -2,9 +2,14 @@
 'AI Accuracy Metrics' / 'Translation Confidence' dashboards directly -- there's no separate
 AI-metrics pipeline. See docs/AI_ARCHITECTURE.md #observability."""
 
+import logging
 import time
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
+
+from app.core.events import AI_AGENT_CALL_RECORDED, Event, event_bus
+
+logger = logging.getLogger("ai.observability")
 
 
 @dataclass
@@ -18,9 +23,11 @@ class AgentCallEvent:
 
 
 async def emit_agent_call_event(event: AgentCallEvent) -> None:
-    # Phase 3: publish to the same event stream analytics.service consumes (Redis pub/sub or a
-    # queue -- see docs/WORKFLOWS.md #why-workflows-are-event-driven).
-    raise NotImplementedError
+    # Real publish onto the same EventBus everything else uses (app/core/events.py) -- the
+    # analytics module subscribes to AGENT_CALL_RECORDED once it exists (Phase 3 continued);
+    # until then this is a no-op fan-out, not a crash, and the log line keeps it observable now.
+    logger.info("agent call", extra=asdict(event))
+    await event_bus.publish(Event(type=AI_AGENT_CALL_RECORDED, org_id=event.org_id, payload=asdict(event)))
 
 
 @asynccontextmanager

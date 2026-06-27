@@ -28,6 +28,7 @@ FOLLOW_UP_SCHEDULED = "follow_up.scheduled"
 MEDICAL_CASE_STAGE_CHANGED = "medical_case.stage_changed"
 AI_NEEDS_HUMAN_REVIEW = "ai.needs_human_review"
 AI_EMERGENCY_DETECTED = "ai.emergency_detected"
+AI_AGENT_CALL_RECORDED = "ai.agent_call_recorded"
 
 
 @dataclass

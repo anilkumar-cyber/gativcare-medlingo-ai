@@ -32,6 +32,11 @@ async def create_case(patient_id: uuid.UUID, db: AsyncSession = Depends(get_db),
     return await service.create_case(db, org_id=user.org_id, patient_id=patient_id)
 
 
+@router.get("/{patient_id}/cases", response_model=list[schemas.MedicalCaseOut], dependencies=[Depends(require_permission("patients.view"))])
+async def list_cases(patient_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    return await service.list_cases_for_patient(db, patient_id)
+
+
 @router.get("/cases/{case_id}", response_model=schemas.MedicalCaseOut, dependencies=[Depends(require_permission("patients.view"))])
 async def read_case(case_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     return await service.get_case(db, case_id)

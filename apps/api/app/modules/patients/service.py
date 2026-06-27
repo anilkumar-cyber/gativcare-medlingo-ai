@@ -39,6 +39,11 @@ async def get_case(db: AsyncSession, case_id: uuid.UUID) -> MedicalCase | None:
     return result.scalar_one_or_none()
 
 
+async def list_cases_for_patient(db: AsyncSession, patient_id: uuid.UUID) -> list[MedicalCase]:
+    result = await db.execute(select(MedicalCase).where(MedicalCase.patient_id == patient_id))
+    return list(result.scalars().all())
+
+
 async def update_case_stage(db: AsyncSession, medical_case_id: uuid.UUID, new_stage: str) -> MedicalCase | None:
     """Called by app.core.workflow_engine.WorkflowEngine.advance()."""
     case = await get_case(db, medical_case_id)
