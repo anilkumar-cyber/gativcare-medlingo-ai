@@ -35,9 +35,9 @@ class HospitalSearchTool(Tool):
     name = "hospital_search"
     description = "Find hospitals matching a specialty/location/org."
 
-    async def run(self, *, query: str) -> ToolResult:
+    async def run(self, *, db, org_id, query: str) -> ToolResult:
         from app.modules.hospitals import service as hospitals_service
-        results = await hospitals_service.search(query)
+        results = await hospitals_service.search(db, org_id=org_id, query=query)
         return ToolResult(tool_name=self.name, output=results)
 
 
@@ -45,9 +45,9 @@ class DoctorSearchTool(Tool):
     name = "doctor_search"
     description = "Find doctors matching a specialty/hospital/availability."
 
-    async def run(self, *, query: str) -> ToolResult:
+    async def run(self, *, db, org_id, query: str) -> ToolResult:
         from app.modules.doctors import service as doctors_service
-        results = await doctors_service.search(query)
+        results = await doctors_service.search(db, org_id=org_id, query=query)
         return ToolResult(tool_name=self.name, output=results)
 
 
@@ -55,12 +55,12 @@ class AppointmentSchedulingTool(Tool):
     name = "schedule_appointment"
     description = "Book or reschedule an appointment for a medical case."
 
-    async def run(self, *, medical_case_id, doctor_id=None, appointment_id=None, slot) -> ToolResult:
+    async def run(self, *, db, medical_case_id=None, doctor_id=None, appointment_id=None, slot) -> ToolResult:
         from app.modules.appointments import service as appointments_service
         if appointment_id:
-            result = await appointments_service.reschedule(appointment_id, slot)
+            result = await appointments_service.reschedule(db, appointment_id, slot)
         else:
-            result = await appointments_service.book(medical_case_id, doctor_id, slot)
+            result = await appointments_service.book(db, medical_case_id, doctor_id, slot)
         return ToolResult(tool_name=self.name, output=result)
 
 

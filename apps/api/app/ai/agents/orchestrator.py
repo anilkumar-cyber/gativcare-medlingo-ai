@@ -147,7 +147,7 @@ class MedLingoOrchestrator:
             "journey_data": request.extra.get("journey_data", {}),
         }
 
-        response = await self._dispatch_agents(agent_keys, agent_payload, org_id=request.org_id)
+        response = await self._dispatch_agents(agent_keys, agent_payload, org_id=request.org_id, user=user)
         response = await self._translate_if_needed(response, request, language, agent_keys)
 
         audio_out = None
@@ -170,14 +170,14 @@ class MedLingoOrchestrator:
             metadata=response.metadata,
         )
 
-    async def _dispatch_agents(self, agent_keys: list[str], agent_payload: dict, *, org_id: str) -> AgentResponse:
+    async def _dispatch_agents(self, agent_keys: list[str], agent_payload: dict, *, org_id: str, user) -> AgentResponse:
         from app.core.observability import measure_agent_call
-        from app.core.security import require_permission
+        from app.core.security import check_permission
 
         responses: list[AgentResponse] = []
         for key in agent_keys:
             if key != "emergency":  # emergency response must never be blockable by a missing
-                require_permission(f"ai.{key}.run")  # permission grant -- see docs/RBAC.md
+                check_permission(user, f"ai.{key}.run")  # permission grant -- see docs/RBAC.md
                 # per-agent, not just "can use AI at all"
             agent = self.agents[key]
             async with measure_agent_call(agent_name=key, org_id=org_id, provider_used=type(self.llm).__name__) as measurement:
@@ -226,7 +226,7 @@ class MedLingoOrchestrator:
     async def _maybe_escalate_to_human(self, request: OrchestratorRequest, org, response: AgentResponse) -> None:
         from app.modules.interpreter import service as interpreter_service
 
-        threshold = (org or {}).get("ai_config", {}).get("hitl_confidence_threshold") if isinstance(org, dict) else None
+        threshold = (org.ai_config or {}).get("hitl_confidence_threshold") if org is not None else None
         decision = interpreter_service.should_escalate(
             confidence=response.confidence, flags=response.flags, org_confidence_threshold=threshold
         )
@@ -246,16 +246,16 @@ class MedLingoOrchestrator:
 
     async def _identify_user(self, request: OrchestratorRequest):
         from app.modules.auth import service as auth_service
-        return await auth_service.get_user(request.user_id)
+        return await auth_service.get_user(request.db, request.user_id)
 
     async def _identify_organization(self, request: OrchestratorRequest):
         from app.modules.organizations import service as org_service
-        return await org_service.get_org_settings(request.org_id)
+        return await org_service.get_org_settings(request.db, request.org_id)
 
     async def _authenticate(self, request: OrchestratorRequest, user, org) -> None:
-        from app.core.security import require_permission
-        require_permission("conversations.translate")  # coarse "may use the AI orchestrator at
-        # all" gate; per-agent permissions are checked in _dispatch_agents once intent is known.
+        from app.core.security import check_permission
+        check_permission(user, "conversations.translate")  # coarse "may use the AI orchestrator
+        # at all" gate; per-agent permissions are checked in _dispatch_agents once intent is known.
 
     async def _detect_language(self, request: OrchestratorRequest) -> str:
         result = await self.language_engine.run({"text": request.text})
@@ -288,6 +288,7 @@ class MedLingoOrchestrator:
     async def _store_conversation_turn(self, request: OrchestratorRequest, response: AgentResponse) -> None:
         from app.modules.conversations import service as conversation_service
         await conversation_service.add_turn(
+            request.db,
             session_id=request.conversation_session_id,
             speaker_user_id=request.user_id,
             content=response.content,

@@ -1,0 +1,12 @@
+# Local dev override: exposes web/api ports directly so you can hit them without Caddy/a real
+# domain. Run with: docker compose -f docker-compose.yml -f docker-compose.dev.yml up web api postgres redis
+services:
+  web:
+    ports:
+      - "3100:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+
+  api:
+    ports:
+      - "8000:8000"

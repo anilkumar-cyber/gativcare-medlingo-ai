@@ -49,14 +49,14 @@ class WorkflowEngine:
             return None
         return self.stage_sequence[index + 1]
 
-    async def advance(self, *, org_id: str, medical_case_id: str, current_stage: str) -> str | None:
+    async def advance(self, db, *, org_id: str, medical_case_id: str, current_stage: str) -> str | None:
         new_stage = self.next_stage(current_stage)
         if new_stage is None:
             return None
 
         from app.modules.patients import service as patients_service  # owns medical_cases per
-        # docs/MODULES.md ("case records" under patients) -- this call is the Phase 3 seam.
-        await patients_service.update_case_stage(medical_case_id, new_stage)
+        # docs/MODULES.md ("case records" under patients)
+        await patients_service.update_case_stage(db, medical_case_id, new_stage)
 
         await event_bus.publish(Event(
             type=MEDICAL_CASE_STAGE_CHANGED,

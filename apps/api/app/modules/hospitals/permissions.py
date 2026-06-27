@@ -1,0 +1,3 @@
+PERMISSIONS = [
+    "hospitals.manage",
+]
