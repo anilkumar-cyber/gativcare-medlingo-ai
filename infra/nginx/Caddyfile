@@ -1,0 +1,10 @@
+# Reverse proxy + auto TLS for VPS deployment. Swap for nginx.conf if Caddy is replaced later
+# (docs/ARCHITECTURE.md #7) — app containers don't change either way.
+
+{$DOMAIN} {
+    reverse_proxy web:3000
+}
+
+api.{$DOMAIN} {
+    reverse_proxy api:8000
+}

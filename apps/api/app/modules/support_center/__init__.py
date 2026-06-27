@@ -1,0 +1,1 @@
+"""support_center module — see docs/MODULES.md for owned entities and exposed service functions."""

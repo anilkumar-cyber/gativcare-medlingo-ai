@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  web:
+    build: ../../apps/web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_URL=https://api.${DOMAIN}
+    depends_on:
+      - api
+
+  api:
+    build: ../../apps/api
+    restart: unless-stopped
+    env_file: ../../.env
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=gativcare
+      - POSTGRES_USER=gativcare
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../nginx/Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+    depends_on:
+      - web
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
+  caddy_data:
