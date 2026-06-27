@@ -3,6 +3,7 @@ node_modules/
 .next/
 out/
 .turbo/
+*.tsbuildinfo
 
 # Python
 __pycache__/
