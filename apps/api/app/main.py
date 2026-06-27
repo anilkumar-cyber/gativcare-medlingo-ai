@@ -4,6 +4,9 @@ registry and default automations on startup. No business logic here -- see docs/
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import settings
 
 
 @asynccontextmanager
@@ -25,6 +28,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="GativCare MedLingo AI API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[origin.strip() for origin in settings.cors_origins.split(",") if origin.strip()],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 from app.modules.auth.router import router as auth_router
 from app.modules.organizations.router import router as organizations_router

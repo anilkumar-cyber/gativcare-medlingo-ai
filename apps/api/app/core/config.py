@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     jwt_expire_minutes: int = 60 * 24
     anthropic_api_key: str
     anthropic_model: str = "claude-sonnet-4-6"
+    # Comma-separated. The web app runs on a different port than the API in dev (3100 vs 8000),
+    # which browsers treat as a different origin -- without this, every fetch from the browser
+    # gets silently blocked by CORS regardless of how correct the rest of the request is.
+    cors_origins: str = "http://localhost:3100,http://localhost:3000"
 
     class Config:
         env_file = ".env"
