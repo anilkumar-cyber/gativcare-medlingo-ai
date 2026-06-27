@@ -10,3 +10,8 @@ services:
   api:
     ports:
       - "8000:8000"
+    volumes:
+      # Without this, anything alembic/app writes inside the container (migration files) lives
+      # only in the container's writable layer and vanishes on the next `up --build` -- it never
+      # reaches the host repo to be committed. Bind-mount the one directory that matters for that.
+      - ../../apps/api/migrations:/app/migrations
